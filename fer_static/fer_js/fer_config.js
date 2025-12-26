@@ -2,7 +2,7 @@
 const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyaoTdLtc0jlYO9NFPuxKUEONiuJM56yn0lb_HFNhb9XNUkd5N_yGdt9zV35NFyeJWs_g/exec";
 
 // WhatsApp de Fernando (formato internacional SIN +, sin espacios). Ej: 54911XXXXXXXX
-const WHATSAPP_NUMBER = "5491166764043";
+const WHATSAPP_NUMBER = "5491154574368";
 
 // Reglas visibles en la UI (deben coincidir con Apps Script)
 const NUMS_PER_PURCHASE = 5;
