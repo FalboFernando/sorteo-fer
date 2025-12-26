@@ -1,0 +1,223 @@
+:root{
+  --card-radius: 18px;
+  --glass: rgba(255,255,255,.06);
+  --stroke: rgba(255,255,255,.10);
+  --txt: #e7eef7;
+  --muted: rgba(231,238,247,.75);
+}
+
+html, body{
+  height: 100%;
+}
+
+body{
+  background: #0b0f14;
+  color: var(--txt);
+}
+
+/* Navbar glass */
+.navglass{
+  background: rgba(16, 22, 32, .78) !important;
+  backdrop-filter: blur(10px);
+  border-color: var(--stroke) !important;
+}
+
+.border-top, .border-bottom{
+  border-color: rgba(255,255,255,.08) !important;
+}
+
+.hero{
+  background: radial-gradient(1000px 500px at 20% 20%, rgba(60, 255, 199, .14), transparent 60%),
+              radial-gradient(800px 400px at 80% 40%, rgba(80, 160, 255, .14), transparent 60%);
+}
+
+/* Cards */
+.cardglass{
+  border-radius: var(--card-radius);
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+}
+
+.modalglass{
+  background: rgba(15, 20, 30, .96);
+  border: 1px solid var(--stroke);
+  color: var(--txt);
+}
+
+.font-mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Steps */
+.steps .step{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:10px 0;
+}
+
+.step-num{
+  width:28px;
+  height:28px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(60,255,199,.16);
+  border: 1px solid rgba(60,255,199,.35);
+  font-weight: 800;
+}
+
+/* Grid */
+.numbers-grid{
+  display:grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap:10px;
+}
+
+@media (max-width: 992px){
+  .numbers-grid{ grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+@media (max-width: 576px){
+  .numbers-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+.num-btn{
+  border-radius: 14px;
+  padding: 10px 6px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--txt);
+  transition: transform .05s ease, background .15s ease;
+}
+
+.num-btn:hover{
+  background: rgba(255,255,255,.08);
+}
+
+.num-btn:active{
+  transform: translateY(1px);
+}
+
+.num-btn.reserved{
+  background: rgba(255, 70, 70, .14);
+  border-color: rgba(255, 70, 70, .35);
+  color: rgba(255,255,255,.85);
+  cursor: not-allowed;
+}
+
+.num-btn.selected{
+  background: rgba(60,255,199,.20);
+  border-color: rgba(60,255,199,.45);
+}
+
+.legend{
+  display:inline-block;
+  width:14px;
+  height:14px;
+  border-radius: 4px;
+  vertical-align: -2px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.04);
+}
+
+.legend.reserved{
+  background: rgba(255, 70, 70, .14);
+  border-color: rgba(255, 70, 70, .35);
+}
+.legend.selected{
+  background: rgba(60,255,199,.20);
+  border-color: rgba(60,255,199,.45);
+}
+
+.qr-box{
+  background: #fff;
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.text-muted{ color: var(--muted) !important; }
+
+/* Alerts a juego con dark */
+.alert{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  color: var(--txt);
+}
+/* =========================
+   FIX: legibilidad (textos blancos)
+   ========================= */
+
+/* Navbar brand visible */
+.navglass .navbar-brand,
+.navglass .navbar-brand i{
+  color: var(--txt) !important;
+}
+
+/* Todo texto dentro de cards en claro (incluye "Transparencia") */
+.cardglass,
+.cardglass .card-body,
+.cardglass .card-body *{
+  color: var(--txt);
+}
+
+/* Los .text-muted de Bootstrap a un gris más legible */
+.cardglass .text-muted,
+.text-muted{
+  color: rgba(231,238,247,.78) !important;
+}
+
+/* Labels del formulario (Bootstrap los deja oscuros por defecto) */
+.form-label,
+label{
+  color: rgba(231,238,247,.92) !important;
+}
+
+/* Inputs en modo oscuro (para que no queden blancos con texto raro) */
+.form-control,
+.form-select{
+  background: rgba(255,255,255,.07) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: rgba(231,238,247,.95) !important;
+}
+
+.form-control::placeholder{
+  color: rgba(231,238,247,.55) !important;
+}
+
+/* Focus visible en dark */
+.form-control:focus,
+.form-select:focus{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(231,238,247,.98) !important;
+  border-color: rgba(60,255,199,.45) !important;
+  box-shadow: 0 0 0 .2rem rgba(60,255,199,.12) !important;
+}
+
+/* Alerts: Bootstrap setea colores de texto oscuros (warning/info) */
+.alert,
+.alert *{
+  color: rgba(231,238,247,.95) !important;
+}
+
+.alert.alert-warning{
+  background: rgba(255,193,7,.10) !important;
+  border-color: rgba(255,193,7,.25) !important;
+}
+
+.alert.alert-info{
+  background: rgba(13,202,240,.10) !important;
+  border-color: rgba(13,202,240,.22) !important;
+}
+
+.alert.alert-success{
+  background: rgba(25,135,84,.12) !important;
+  border-color: rgba(25,135,84,.25) !important;
+}
+
+.alert.alert-danger{
+  background: rgba(220,53,69,.12) !important;
+  border-color: rgba(220,53,69,.25) !important;
+}

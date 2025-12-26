@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sorteo solidario • Fernando Falbo</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <!-- Estilos locales (temporal para no chocar con otros projects) -->
+  <link rel="stylesheet" href="fer_static/fer_css/fer_styles.css" />
+
+  <!-- HERO background helper -->
+  <style>
+    .hero.hero-photo{
+      position: relative;
+      overflow: hidden;
+      min-height: 520px;
+      background:
+        linear-gradient(90deg, rgba(10,15,20,.92) 0%, rgba(10,15,20,.78) 45%, rgba(10,15,20,.65) 100%),
+        url("fer_static/fer_img/fer.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    /* capa extra para asegurar contraste en pantallas claras */
+    .hero.hero-photo::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(0,0,0,.35), transparent 60%);
+      pointer-events:none;
+    }
+    .hero.hero-photo > .container{
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg border-bottom sticky-top navglass">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-ticket-perforated"></i> Sorteo solidario
+      </a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-light btn-sm" href="#participar"><i class="bi bi-hand-index"></i> Participar</a>
+        <a class="btn btn-primary btn-sm" href="#numeros"><i class="bi bi-grid-3x3-gap"></i> Números</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="py-5 hero hero-photo">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <h1 class="display-6 fw-bold mb-2">Sorteo solidario</h1>
+          <p class="lead mb-3">
+            Con tu ayuda recaudamos fondos para la compra de un <strong>aspirador ultrasónico</strong>
+            que se usará en una cirugía abierta de hígado para Fernando.
+          </p>
+
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge text-bg-dark p-2">
+              <i class="bi bi-cash-coin"></i> $10.000 = 5 números
+            </span>
+            <span class="badge text-bg-secondary p-2">
+              <i class="bi bi-calendar-event"></i> Sorteo: Gordo de Reyes (Lotería Nacional) • 16/01/2026
+            </span>
+            <span class="badge text-bg-success p-2">
+              <i class="bi bi-bank"></i> Alias: <span class="font-mono">f.falbo</span>
+            </span>
+          </div>
+
+          <div class="mt-4 d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="#numeros">
+              <i class="bi bi-grid"></i> Elegir números
+            </a>
+            <a class="btn btn-outline-light" href="#compartir">
+              <i class="bi bi-share"></i> Compartir
+            </a>
+          </div>
+
+          <div class="mt-4 small text-muted">
+            * Los números se reservan al confirmar el formulario. Luego enviás el comprobante por WhatsApp.
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card cardglass shadow-sm">
+            <div class="card-body">
+              <h2 class="h6 fw-bold mb-3"><i class="bi bi-gift"></i> Premios</h2>
+              <ol class="mb-0">
+                <li>TV Smart 50"</li>
+                <li>Freidora de aire</li>
+                <li>Licuadora</li>
+              </ol>
+              <hr>
+              <div class="d-flex gap-3 flex-wrap">
+                <div>
+                  <div class="small text-muted">Disponibles</div>
+                  <div class="h4 mb-0" id="countLibre">—</div>
+                </div>
+                <div>
+                  <div class="small text-muted">Reservados</div>
+                  <div class="h4 mb-0" id="countReservado">—</div>
+                </div>
+                <div>
+                  <div class="small text-muted">Confirmados</div>
+                  <div class="h4 mb-0" id="countConfirmado">—</div>
+                </div>
+              </div>
+
+              <button class="btn btn-outline-light w-100 mt-3" id="btnRefresh">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar disponibilidad
+              </button>
+
+              <div class="alert alert-warning mt-3 mb-0 small">
+                <strong>Importante:</strong> elegís <span id="numsPerPurchase">5</span> números.
+                Si alguno se ocupa justo antes, el sistema te avisa para elegir otros.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="pb-5">
+    <!-- CÓMO PARTICIPAR -->
+    <section class="py-5 border-top" id="participar">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <h2 class="h4 fw-bold mb-3"><i class="bi bi-info-circle"></i> Cómo participar</h2>
+
+            <div class="steps">
+              <div class="step">
+                <div class="step-num">1</div>
+                <div>Elegí <strong>5 números</strong> en la grilla.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div>Completá tus datos y confirmá la reserva. Se genera un <strong>ID de operación</strong>.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div>Transferí a <strong>alias <span class="font-mono">f.falbo</span></strong> y enviá el comprobante por WhatsApp.</div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <h3 class="h6 fw-bold mb-2"><i class="bi bi-bank"></i> Datos de transferencia</h3>
+              <ul class="mb-0">
+                <li>Alias: <strong class="font-mono">f.falbo (Cuenta a nombre de Fernando)</strong></li>
+                <li>Monto: <strong>$10.000</strong></li>
+                <li>Concepto sugerido: <em>Sorteo + tu nombre</em></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card cardglass shadow-sm">
+              <div class="card-body">
+                <h3 class="h6 fw-bold mb-3"><i class="bi bi-qr-code"></i> QR de transferencia (informativo)</h3>
+                <div class="d-flex justify-content-center">
+                  <div id="qrTransfer" class="qr-box"></div>
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                  Este QR contiene texto con alias/monto. Si tu app bancaria no lo toma como pago automático, usalo para copiar datos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SELECTOR -->
+    <section class="py-5 border-top" id="numeros">
+      <div class="container">
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-end mb-3">
+          <div>
+            <h2 class="h4 fw-bold mb-1"><i class="bi bi-grid-3x3-gap"></i> Elegí tus números</h2>
+            <div class="text-muted small">Seleccionados: <strong id="selectedCount">0</strong>/<strong id="selectedMax">5</strong></div>
+          </div>
+
+          <div class="d-flex gap-2 align-items-center">
+            <label class="small text-muted mb-0">Página</label>
+            <select id="pageSelect" class="form-select form-select-sm" style="width:auto"></select>
+            <button class="btn btn-outline-light btn-sm" id="btnClear">
+              <i class="bi bi-x-circle"></i> Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div id="numbersGrid" class="numbers-grid"></div>
+
+        <div class="mt-3 small text-muted">
+          <span class="legend free"></span> Disponible
+          <span class="legend reserved ms-3"></span> Ocupado
+          <span class="legend selected ms-3"></span> Seleccionado
+        </div>
+
+        <hr class="my-5">
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <h3 class="h5 fw-bold mb-3"><i class="bi bi-pencil-square"></i> Tus datos</h3>
+
+            <form id="reserveForm" class="card cardglass shadow-sm">
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-7">
+                    <label class="form-label">Nombre y apellido *</label>
+                    <input type="text" class="form-control" id="inpNombre" required maxlength="80">
+                  </div>
+                  <div class="col-md-5">
+                    <label class="form-label">DNI (opcional)</label>
+                    <input type="text" class="form-control" id="inpDni" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Teléfono (WhatsApp) *</label>
+                    <input type="tel" class="form-control" id="inpTelefono" required maxlength="30" placeholder="+54 11 ...">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email (opcional)</label>
+                    <input type="email" class="form-control" id="inpEmail" maxlength="80">
+                  </div>
+
+                  <div class="col-12">
+                    <div class="alert alert-info small mb-0">
+                      Se reservarán los <strong>5 números</strong> al enviar. Luego te damos un botón para enviar el comprobante por WhatsApp.
+                    </div>
+                  </div>
+
+                  <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" id="btnReserve">
+                      <i class="bi bi-check2-circle"></i> Confirmar reserva
+                    </button>
+                    <button class="btn btn-outline-light" type="button" id="btnAutoScrollTop">
+                      <i class="bi bi-arrow-up"></i> Volver a números
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div id="statusBox" class="mt-3"></div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card cardglass shadow-sm">
+              <div class="card-body">
+                <h3 class="h6 fw-bold mb-3"><i class="bi bi-shield-check"></i> Transparencia</h3>
+                <ul class="small mb-0">
+                  <li>Los números ocupados quedan bloqueados para otros.</li>
+                  <li>Fernando recibe de manera directa las transferencias y gestiona los numeros.</li>
+                  <li>Si hay choque (dos personas eligiendo igual), gana quien confirma primero.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card cardglass shadow-sm mt-3" id="compartir">
+              <div class="card-body">
+                <h3 class="h6 fw-bold mb-3"><i class="bi bi-share"></i> Compartir este sitio</h3>
+                <div class="d-flex justify-content-center">
+                  <div id="qrShare" class="qr-box"></div>
+                </div>
+                <button class="btn btn-outline-light w-100 mt-3" id="btnCopyLink">
+                  <i class="bi bi-clipboard"></i> Copiar link
+                </button>
+                <div class="small text-muted mt-2">Compartilo por WhatsApp, Instagram, Facebook, etc.</div>
+              </div>
+            </div>
+
+            <div class="small text-muted mt-3">
+              * Sitio solidario. El sorteo se referencia al resultado del Gordo de Reyes del 16/01/2026.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL ÉXITO -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modalglass">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-check-circle"></i> Reserva confirmada</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Operación: <strong class="font-mono" id="modalOpId">—</strong></p>
+          <p class="mb-2">Números: <strong id="modalNums">—</strong></p>
+          <hr>
+          <p class="mb-2"><strong>Ahora:</strong> transferí <strong>$10.000</strong> a <strong class="font-mono">f.falbo</strong>.</p>
+          <p class="mb-0">Después, enviá el comprobante por WhatsApp con el botón.</p>
+        </div>
+        <div class="modal-footer d-flex flex-wrap gap-2">
+          <a class="btn btn-success" id="btnWhatsApp" href="#" target="_blank" rel="noopener">
+            <i class="bi bi-whatsapp"></i> Enviar comprobante por WhatsApp
+          </a>
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Config + App (local temporal) -->
+  <script src="fer_static/fer_js/fer_config.js"></script>
+  <script src="fer_static/fer_js/fer_app.js"></script>
+</body>
+</html>
