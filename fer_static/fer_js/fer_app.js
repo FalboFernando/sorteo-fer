@@ -1,18 +1,18 @@
-// fer_app.js (con marcado de "comprobante_enviado" al hacer click en el botón WhatsApp)
-// + anti-cache robusto + auto-refresh
+// fer_app.js
+// - anti-cache robusto
+// - auto-refresh
+// - muestra error claro si falta config o si WebApp no devuelve JSON
 
-let occupiedSet = new Set();   // enteros ocupados
-let selected = new Set();      // enteros seleccionados
-let allNumbers = [];           // enteros del rango
+let occupiedSet = new Set();
+let selected = new Set();
+let allNumbers = [];
 let currentPage = 0;
 let RANGE_MIN = 0;
 let RANGE_MAX = 999;
 let RANGE_WIDTH = 3;
 
-// guardamos la última operación confirmada para poder marcar comprobante_enviado
 let lastOpId = null;
 
-// Auto-refresh
 const AUTO_REFRESH_MS = 30000; // 30s
 let autoRefreshTimer = null;
 let refreshInFlight = false;
@@ -46,13 +46,11 @@ const inpDni = document.getElementById('inpDni');
 const inpTelefono = document.getElementById('inpTelefono');
 const inpEmail = document.getElementById('inpEmail');
 
-elSelectedMax.textContent = String(NUMS_PER_PURCHASE);
-elNumsPerPurchase.textContent = String(NUMS_PER_PURCHASE);
-
 function showAlert(type, msg) {
+  if (!elStatusBox) return;
   elStatusBox.innerHTML = `<div class="alert alert-${type} small" role="alert">${msg}</div>`;
 }
-function clearAlert() { elStatusBox.innerHTML = ''; }
+function clearAlert() { if (elStatusBox) elStatusBox.innerHTML = ''; }
 
 function padNumber(n, width) {
   const s = String(n);
@@ -67,16 +65,28 @@ function buildAllNumbers(min, max) {
 
 function normalizeToIntArray(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr
-    .map(v => Number(String(v).trim()))
+  return arr.map(v => Number(String(v).trim())). confirms? 
     .filter(v => Number.isFinite(v));
 }
 
+/** chequeo duro de config para que no muera “silencioso” */
+function assertConfigOrDie() {
+  const missing = [];
+  if (typeof API_BASE_URL === 'undefined') missing.push('API_BASE_URL');
+  if (typeof NUMS_PER_PURCHASE === 'undefined') missing.push('NUMS_PER_PURCHASE');
+  if (typeof PAGE_SIZE === 'undefined') missing.push('PAGE_SIZE');
+  if (missing.length) {
+    showAlert('danger', `Error: no cargó fer_config.js (faltan: <b>${missing.join(', ')}</b>).<br>
+    Revisá rutas/nombres en index.html y mayúsculas/minúsculas en GitHub.`);
+    throw new Error('Config missing: ' + missing.join(', '));
+  }
+}
+
 /**
- * Anti-cache robusto:
+ * fetch JSON anti-cache:
  * - agrega _=timestamp
- * - cache: 'no-store'
- * - headers no-cache (ayuda con algunos proxies)
+ * - cache: no-store
+ * - detecta si el servidor devuelve HTML (login/permisos) y lo muestra
  */
 async function fetchJSONNoCache(url, options = {}) {
   const u = new URL(url);
@@ -92,14 +102,18 @@ async function fetchJSONNoCache(url, options = {}) {
     }
   });
 
-  // si Apps Script devuelve HTML (por error), esto ayuda a detectar
-  const ct = res.headers.get('content-type') || '';
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
   if (!ct.includes('application/json')) {
     const txt = await res.text();
-    throw new Error(`Respuesta no-JSON (${res.status}). ${txt.slice(0, 120)}...`);
+    throw new Error(`WebApp no devolvió JSON (HTTP ${res.status}). Posible permisos/deploy.<br><small>${escapeHtml(txt.slice(0, 180))}...</small>`);
   }
-
   return res.json();
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
 async function fetchInfo() {
@@ -179,11 +193,6 @@ function renderGrid() {
   }
 }
 
-/**
- * refreshAvailability:
- * - evita requests simultáneos (refreshInFlight)
- * - no pisa la UI si falla (solo muestra error en manual refresh)
- */
 async function refreshAvailability({ silent = true } = {}) {
   if (refreshInFlight) return;
   refreshInFlight = true;
@@ -200,6 +209,7 @@ async function refreshAvailability({ silent = true } = {}) {
     updateCounters(data.counts);
     renderGrid();
   } catch (err) {
+    console.error(err);
     if (!silent) showAlert('danger', `No se pudo actualizar: ${err.message}`);
   } finally {
     refreshInFlight = false;
@@ -234,9 +244,8 @@ function makeWhatsAppLink(opId, numsInt, nombre, telefono) {
 
 async function markProofSent(opId) {
   if (!opId) return;
-
   try {
-    await fetch(API_BASE_URL, {
+    await fetch(`${API_BASE_URL}?_=${Date.now()}`, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'proof_sent', operacion_id: opId }),
@@ -268,26 +277,13 @@ async function reserve() {
   btnReserve.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Reservando...`;
 
   try {
-    const payload = {
-      nombre_apellido: nombre,
-      dni,
-      telefono,
-      email,
-      numeros: numerosInt
-    };
+    const payload = { nombre_apellido: nombre, dni, telefono, email, numeros: numerosInt };
 
-    const res = await fetch(`${API_BASE_URL}?_=${Date.now()}`, {
+    const data = await fetchJSONNoCache(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
-      cache: 'no-store',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
-
-    const data = await res.json();
 
     if (!data.ok) {
       await refreshAvailability({ silent: true });
@@ -297,7 +293,7 @@ async function reserve() {
 
       const occ = normalizeToIntArray(data.occupied || []);
       const occTxt = occ.length ? occ.map(n => padNumber(n, RANGE_WIDTH)).join(', ') : '—';
-      showAlert('danger', `No se pudo reservar. Números ocupados (según servidor): <strong>${occTxt}</strong>. Elegí otros y reintentá.`);
+      showAlert('danger', `No se pudo reservar. Ocupados: <strong>${occTxt}</strong>. Elegí otros y reintentá.`);
       return;
     }
 
@@ -318,7 +314,7 @@ async function reserve() {
 
     showAlert('success', `Reserva confirmada. Operación: <strong class="font-mono">${data.operacion_id}</strong>.`);
   } catch (err) {
-    showAlert('danger', `Error de conexión: ${err.message}`);
+    showAlert('danger', `Error: ${err.message}`);
   } finally {
     btnReserve.disabled = false;
     btnReserve.innerHTML = `<i class="bi bi-check2-circle"></i> Confirmar reserva`;
@@ -327,14 +323,10 @@ async function reserve() {
 
 function startAutoRefresh() {
   stopAutoRefresh();
-  autoRefreshTimer = setInterval(() => {
-    // silencioso: no llena de alerts
-    refreshAvailability({ silent: true }).catch(() => {});
-  }, AUTO_REFRESH_MS);
+  autoRefreshTimer = setInterval(() => refreshAvailability({ silent: true }), AUTO_REFRESH_MS);
 
-  // si la pestaña vuelve a estar visible, refrescamos una vez
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refreshAvailability({ silent: true }).catch(() => {});
+    if (!document.hidden) refreshAvailability({ silent: true });
   });
 }
 
@@ -346,15 +338,11 @@ function stopAutoRefresh() {
 function wireEvents() {
   btnRefresh.addEventListener('click', async () => {
     clearAlert();
-    try {
-      btnRefresh.disabled = true;
-      btnRefresh.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Actualizando...`;
-      await refreshAvailability({ silent: false });
-      showAlert('success', 'Disponibilidad actualizada.');
-    } finally {
-      btnRefresh.disabled = false;
-      btnRefresh.innerHTML = `<i class="bi bi-arrow-clockwise"></i> Actualizar disponibilidad`;
-    }
+    btnRefresh.disabled = true;
+    btnRefresh.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Actualizando...`;
+    await refreshAvailability({ silent: false });
+    btnRefresh.disabled = false;
+    btnRefresh.innerHTML = `<i class="bi bi-arrow-clockwise"></i> Actualizar disponibilidad`;
   });
 
   btnClear.addEventListener('click', async () => {
@@ -385,7 +373,7 @@ function wireEvents() {
       await navigator.clipboard.writeText(window.location.href);
       showAlert('success', 'Link copiado al portapapeles.');
     } catch {
-      showAlert('warning', 'No pude copiar automáticamente. Copialo manualmente desde la barra de direcciones.');
+      showAlert('warning', 'No pude copiar automáticamente. Copialo manualmente.');
     }
   });
 
@@ -397,6 +385,11 @@ function wireEvents() {
 
 async function main() {
   try {
+    assertConfigOrDie();
+
+    elSelectedMax.textContent = String(NUMS_PER_PURCHASE);
+    elNumsPerPurchase.textContent = String(NUMS_PER_PURCHASE);
+
     const rules = await fetchInfo();
 
     RANGE_MIN = Number(rules.range.min ?? 0);
@@ -410,15 +403,13 @@ async function main() {
     initQRs();
     wireEvents();
 
-    await refreshAvailability({ silent: true });
+    await refreshAvailability({ silent: false });
     updateSelectedUI();
-
-    // ✅ AUTO REFRESH
     startAutoRefresh();
   } catch (err) {
+    console.error(err);
     showAlert('danger', `Error inicializando: ${err.message}`);
   }
 }
 
 main();
-
