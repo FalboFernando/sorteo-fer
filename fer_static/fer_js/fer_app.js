@@ -1,4 +1,5 @@
 // fer_app.js (con marcado de "comprobante_enviado" al hacer click en el botón WhatsApp)
+// + anti-cache robusto + auto-refresh
 
 let occupiedSet = new Set();   // enteros ocupados
 let selected = new Set();      // enteros seleccionados
@@ -10,6 +11,11 @@ let RANGE_WIDTH = 3;
 
 // guardamos la última operación confirmada para poder marcar comprobante_enviado
 let lastOpId = null;
+
+// Auto-refresh
+const AUTO_REFRESH_MS = 30000; // 30s
+let autoRefreshTimer = null;
+let refreshInFlight = false;
 
 const elGrid = document.getElementById('numbersGrid');
 const elSelectedCount = document.getElementById('selectedCount');
@@ -66,16 +72,44 @@ function normalizeToIntArray(arr) {
     .filter(v => Number.isFinite(v));
 }
 
+/**
+ * Anti-cache robusto:
+ * - agrega _=timestamp
+ * - cache: 'no-store'
+ * - headers no-cache (ayuda con algunos proxies)
+ */
+async function fetchJSONNoCache(url, options = {}) {
+  const u = new URL(url);
+  u.searchParams.set('_', String(Date.now()));
+
+  const res = await fetch(u.toString(), {
+    ...options,
+    cache: 'no-store',
+    headers: {
+      ...(options.headers || {}),
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  });
+
+  // si Apps Script devuelve HTML (por error), esto ayuda a detectar
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    const txt = await res.text();
+    throw new Error(`Respuesta no-JSON (${res.status}). ${txt.slice(0, 120)}...`);
+  }
+
+  return res.json();
+}
+
 async function fetchInfo() {
-  const res = await fetch(`${API_BASE_URL}?action=info`);
-  const data = await res.json();
+  const data = await fetchJSONNoCache(`${API_BASE_URL}?action=info`);
   if (!data.ok) throw new Error(data.error || 'No se pudo leer info');
   return data.rules;
 }
 
 async function fetchNumbers() {
-  const res = await fetch(`${API_BASE_URL}?action=numbers`);
-  const data = await res.json();
+  const data = await fetchJSONNoCache(`${API_BASE_URL}?action=numbers`);
   if (!data.ok) throw new Error(data.error || 'No se pudo leer números');
   return data;
 }
@@ -145,17 +179,31 @@ function renderGrid() {
   }
 }
 
-async function refreshAvailability() {
-  const data = await fetchNumbers();
-  // ocupados puede venir como strings "035" o números 35 -> normalizamos a int
-  const occ = (data.occupied || [])
-    .map(x => x.numero ?? x)
-    .map(v => Number(String(v).trim()))
-    .filter(Number.isFinite);
+/**
+ * refreshAvailability:
+ * - evita requests simultáneos (refreshInFlight)
+ * - no pisa la UI si falla (solo muestra error en manual refresh)
+ */
+async function refreshAvailability({ silent = true } = {}) {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
 
-  occupiedSet = new Set(occ);
-  updateCounters(data.counts);
-  renderGrid();
+  try {
+    const data = await fetchNumbers();
+
+    const occ = (data.occupied || [])
+      .map(x => x.numero ?? x)
+      .map(v => Number(String(v).trim()))
+      .filter(Number.isFinite);
+
+    occupiedSet = new Set(occ);
+    updateCounters(data.counts);
+    renderGrid();
+  } catch (err) {
+    if (!silent) showAlert('danger', `No se pudo actualizar: ${err.message}`);
+  } finally {
+    refreshInFlight = false;
+  }
 }
 
 function initQRs() {
@@ -184,10 +232,6 @@ function makeWhatsAppLink(opId, numsInt, nombre, telefono) {
   return `https://wa.me/${encodeURIComponent(to)}?text=${encodeURIComponent(text)}`;
 }
 
-/**
- * Marca en el servidor el estado "comprobante_enviado" para la última operación.
- * Ojo: esto NO confirma pago real, solo que el usuario tocó el botón de WhatsApp.
- */
 async function markProofSent(opId) {
   if (!opId) return;
 
@@ -196,12 +240,10 @@ async function markProofSent(opId) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'proof_sent', operacion_id: opId }),
-      // ayuda a que el request salga incluso si el navegador navega a wa.me
-      keepalive: true
+      keepalive: true,
+      cache: 'no-store'
     });
-  } catch (_) {
-    // no mostramos error para no molestar al usuario
-  }
+  } catch (_) {}
 }
 
 async function reserve() {
@@ -220,7 +262,7 @@ async function reserve() {
     return;
   }
 
-  const numerosInt = Array.from(selected); // enteros
+  const numerosInt = Array.from(selected);
 
   btnReserve.disabled = true;
   btnReserve.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Reservando...`;
@@ -231,20 +273,24 @@ async function reserve() {
       dni,
       telefono,
       email,
-      // IMPORTANTE: mandamos enteros (0..999), no "000"
       numeros: numerosInt
     };
 
-    const res = await fetch(API_BASE_URL, {
+    const res = await fetch(`${API_BASE_URL}?_=${Date.now()}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      cache: 'no-store',
       body: JSON.stringify(payload)
     });
 
     const data = await res.json();
 
     if (!data.ok) {
-      await refreshAvailability();
+      await refreshAvailability({ silent: true });
       selected.clear();
       updateSelectedUI();
       renderGrid();
@@ -256,15 +302,12 @@ async function reserve() {
     }
 
     const numsOK = normalizeToIntArray(data.numeros || numerosInt);
-
-    // Guardamos opId para poder marcar comprobante_enviado al tocar WhatsApp
     lastOpId = data.operacion_id || null;
 
-    // Sincronizamos y limpiamos selección
     selected.clear();
     updateSelectedUI();
 
-    await refreshAvailability();
+    await refreshAvailability({ silent: true });
 
     modalOpId.textContent = data.operacion_id || '—';
     modalNums.textContent = numsOK.map(n => padNumber(n, RANGE_WIDTH)).join(', ');
@@ -282,16 +325,32 @@ async function reserve() {
   }
 }
 
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(() => {
+    // silencioso: no llena de alerts
+    refreshAvailability({ silent: true }).catch(() => {});
+  }, AUTO_REFRESH_MS);
+
+  // si la pestaña vuelve a estar visible, refrescamos una vez
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshAvailability({ silent: true }).catch(() => {});
+  });
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = null;
+}
+
 function wireEvents() {
   btnRefresh.addEventListener('click', async () => {
     clearAlert();
     try {
       btnRefresh.disabled = true;
       btnRefresh.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Actualizando...`;
-      await refreshAvailability();
+      await refreshAvailability({ silent: false });
       showAlert('success', 'Disponibilidad actualizada.');
-    } catch (err) {
-      showAlert('danger', `No se pudo actualizar: ${err.message}`);
     } finally {
       btnRefresh.disabled = false;
       btnRefresh.innerHTML = `<i class="bi bi-arrow-clockwise"></i> Actualizar disponibilidad`;
@@ -302,7 +361,7 @@ function wireEvents() {
     selected.clear();
     updateSelectedUI();
     clearAlert();
-    await refreshAvailability();
+    await refreshAvailability({ silent: true });
   });
 
   elPageSelect.addEventListener('change', () => {
@@ -330,9 +389,7 @@ function wireEvents() {
     }
   });
 
-  // ✅ NUEVO: al tocar el botón de WhatsApp, marcamos "comprobante_enviado"
   btnWhatsApp.addEventListener('click', async () => {
-    // si el href es '#', no hacemos nada
     if (!lastOpId) return;
     await markProofSent(lastOpId);
   });
@@ -344,7 +401,7 @@ async function main() {
 
     RANGE_MIN = Number(rules.range.min ?? 0);
     RANGE_MAX = Number(rules.range.max ?? 999);
-    RANGE_WIDTH = String(RANGE_MAX).length; // 999 -> 3
+    RANGE_WIDTH = String(RANGE_MAX).length;
 
     allNumbers = buildAllNumbers(RANGE_MIN, RANGE_MAX);
     currentPage = 0;
@@ -353,11 +410,15 @@ async function main() {
     initQRs();
     wireEvents();
 
-    await refreshAvailability();
+    await refreshAvailability({ silent: true });
     updateSelectedUI();
+
+    // ✅ AUTO REFRESH
+    startAutoRefresh();
   } catch (err) {
     showAlert('danger', `Error inicializando: ${err.message}`);
   }
 }
 
 main();
+
