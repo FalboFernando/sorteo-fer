@@ -1,5 +1,5 @@
 // URL del Web App (Apps Script)
-const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyaoTdLtc0jlYO9NFPuxKUEONiuJM56yn0lb_HFNhb9XNUkd5N_yGdt9zV35NFyeJWs_g/exec";
+const API_BASE_URL = "https://script.google.com/macros/s/AKfycbzgF2tYHdtMGHNpalfmzV8um0B3MyX-2_gwY-GceHIaSum6qxwMkeXohDtnr2IwSKwVgA/exec";
 
 // WhatsApp de Fernando (formato internacional SIN +, sin espacios). Ej: 54911XXXXXXXX
 const WHATSAPP_NUMBER = "5491154574368";
