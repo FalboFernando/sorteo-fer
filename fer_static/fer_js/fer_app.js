@@ -65,7 +65,8 @@ function buildAllNumbers(min, max) {
 
 function normalizeToIntArray(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.map(v => Number(String(v).trim())). confirms? 
+  return arr
+    .map(v => Number(String(v).trim()))
     .filter(v => Number.isFinite(v));
 }
 
