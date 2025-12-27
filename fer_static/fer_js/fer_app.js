@@ -96,20 +96,23 @@ async function fetchJSONNoCache(url, options = {}) {
   const res = await fetch(u.toString(), {
     ...options,
     cache: 'no-store',
-    headers: {
-      ...(options.headers || {}),
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    }
+    redirect: 'follow',
+    credentials: 'omit'
+    // NO headers personalizados acá (evita preflight)
   });
 
   const ct = (res.headers.get('content-type') || '').toLowerCase();
-  if (!ct.includes('application/json')) {
-    const txt = await res.text();
-    throw new Error(`WebApp no devolvió JSON (HTTP ${res.status}). Posible permisos/deploy.<br><small>${escapeHtml(txt.slice(0, 180))}...</small>`);
+  const txt = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${txt.slice(0, 180)}`);
   }
-  return res.json();
+  if (!ct.includes('application/json')) {
+    throw new Error(`No devolvió JSON (CT=${ct || '—'}). Resp: ${txt.slice(0, 180)}`);
+  }
+  return JSON.parse(txt);
 }
+
 
 function escapeHtml(s) {
   return String(s)
