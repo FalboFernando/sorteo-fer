@@ -14,5 +14,5 @@ const PAGE_SIZE = 100;
 
 // Texto del QR de transferencia (informativo)
 function transferQRText() {
-  return `ALIAS: ${TRANSFER_ALIAS}\nMONTO: ${PRICE}\nCONCEPTO: Sorteo solidario`;
+  return `ALIAS: ${TRANSFER_ALIAS}\nMONTO: ${PRICE}\nCONCEPTO: Sorteo solidario\nTEL: 1166764043`;
 }
