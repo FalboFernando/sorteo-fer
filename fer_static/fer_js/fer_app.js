@@ -46,6 +46,19 @@ const inpDni = document.getElementById('inpDni');
 const inpTelefono = document.getElementById('inpTelefono');
 const inpEmail = document.getElementById('inpEmail');
 
+// Gate modal (bloqueo cierre hasta click WhatsApp)
+let successModalInstance = null;
+let waGateSatisfied = false;
+
+const modalCloseX = document.getElementById('modalCloseX');
+const btnModalClose = document.getElementById('btnModalClose');
+
+function setModalClosable(canClose) {
+  const ok = !!canClose;
+  if (modalCloseX) modalCloseX.disabled = !ok;
+  if (btnModalClose) btnModalClose.disabled = !ok;
+}
+
 function showAlert(type, msg) {
   if (!elStatusBox) return;
   elStatusBox.innerHTML = `<div class="alert alert-${type} small" role="alert">${msg}</div>`;
@@ -87,7 +100,7 @@ function assertConfigOrDie() {
  * fetch JSON anti-cache:
  * - agrega _=timestamp
  * - cache: no-store
- * - detecta si el servidor devuelve HTML (login/permisos) y lo muestra
+ * - evita preflight (sin headers custom)
  */
 async function fetchJSONNoCache(url, options = {}) {
   const u = new URL(url);
@@ -111,13 +124,6 @@ async function fetchJSONNoCache(url, options = {}) {
     throw new Error(`No devolvió JSON (CT=${ct || '—'}). Resp: ${txt.slice(0, 180)}`);
   }
   return JSON.parse(txt);
-}
-
-
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
 async function fetchInfo() {
@@ -235,13 +241,17 @@ function makeWhatsAppLink(opId, numsInt, nombre, telefono) {
   if (!to || to.includes('XXXXXXXX')) return '#';
 
   const numsTxt = numsInt.map(n => padNumber(n, RANGE_WIDTH)).join(', ');
+  const priceTxt = (typeof PRICE !== 'undefined') ? PRICE : 10000;
+
   const text =
-    `Hola! Soy ${nombre}.` +
-    `\nReservé ${NUMS_PER_PURCHASE} números para el sorteo solidario.` +
+    `Hola Fernando, soy ${nombre}.` +
+    `\nQuiero ayudarte en esta etapa.` +
+    `\nAcabo de reservar el aporte solidario de $${priceTxt} (equivale a ${NUMS_PER_PURCHASE} números).` +
     `\nOperación: ${opId}` +
-    `\nNúmeros: ${numsTxt}` +
-    `\nTel: ${telefono}` +
-    `\nAdjunto comprobante. Gracias!`;
+    `\nNúmeros reservados: ${numsTxt}` +
+    `\nTeléfono: ${telefono}` +
+    `\n\nVoy a enviarte el comprobante ahora o en un rato (según me permita el banco).` +
+    `\nGracias y mucha fuerza.`;
 
   return `https://wa.me/${encodeURIComponent(to)}?text=${encodeURIComponent(text)}`;
 }
@@ -313,8 +323,27 @@ async function reserve() {
     modalNums.textContent = numsOK.map(n => padNumber(n, RANGE_WIDTH)).join(', ');
     btnWhatsApp.href = makeWhatsAppLink(data.operacion_id, numsOK, nombre, telefono);
 
-    const modal = new bootstrap.Modal(document.getElementById('successModal'));
-    modal.show();
+    // Gate: bloquear cierre hasta click WhatsApp
+    waGateSatisfied = false;
+    setModalClosable(false);
+
+    successModalInstance = new bootstrap.Modal(document.getElementById('successModal'), {
+      backdrop: 'static',
+      keyboard: false
+    });
+    successModalInstance.show();
+
+    // Intento de abrir WhatsApp automáticamente (puede ser bloqueado)
+    setTimeout(() => {
+      try {
+        const w = window.open(btnWhatsApp.href, '_blank');
+        if (!w) {
+          showAlert('warning', 'Tu navegador bloqueó la apertura automática. Tocá el botón verde de WhatsApp para continuar.');
+        }
+      } catch {
+        showAlert('warning', 'Tocá el botón verde de WhatsApp para continuar.');
+      }
+    }, 350);
 
     showAlert('success', `Reserva confirmada. Operación: <strong class="font-mono">${data.operacion_id}</strong>.`);
   } catch (err) {
@@ -381,10 +410,21 @@ function wireEvents() {
     }
   });
 
+  // Gate: habilitar cerrar SOLO después de tocar WhatsApp
   btnWhatsApp.addEventListener('click', async () => {
-    if (!lastOpId) return;
-    await markProofSent(lastOpId);
+    waGateSatisfied = true;
+    setModalClosable(true);
+
+    if (lastOpId) await markProofSent(lastOpId);
   });
+
+  // Botón X (si se habilita)
+  if (modalCloseX) {
+    modalCloseX.addEventListener('click', () => {
+      if (!waGateSatisfied) return;
+      if (successModalInstance) successModalInstance.hide();
+    });
+  }
 }
 
 async function main() {
