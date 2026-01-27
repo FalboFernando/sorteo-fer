@@ -10,10 +10,9 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-  <!-- Estilos locales (temporal para no chocar con otros projects) -->
+  <!-- Estilos locales -->
   <link rel="stylesheet" href="fer_static/fer_css/fer_styles.css" />
 
-  <!-- HERO background helper -->
   <style>
     .hero.hero-photo{
       position: relative;
@@ -26,7 +25,6 @@
       background-position: center;
       background-repeat: no-repeat;
     }
-    /* capa extra para asegurar contraste en pantallas claras */
     .hero.hero-photo::before{
       content:"";
       position:absolute;
@@ -38,6 +36,32 @@
       position: relative;
       z-index: 1;
     }
+
+    /* extras para “cierre” */
+    .winner-card .badge{ font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* ==============================
+       FIX: QR “en blanco”
+       Si fer_styles.css aplica filters (invert/brightness) o blend modes,
+       el QR puede quedar ilegible. Forzamos render normal.
+       ============================== */
+    #qrResults{
+      background: #fff;
+      padding: 14px;
+      border-radius: 16px;
+      display: inline-block;
+    }
+    #qrResults canvas,
+    #qrResults img,
+    #qrResults table{
+      background: #fff !important;
+      filter: none !important;
+      mix-blend-mode: normal !important;
+      opacity: 1 !important;
+    }
+    #qrResults table{ border-collapse: collapse; }
+    #qrResults table td{ padding: 0; margin: 0; }
   </style>
 </head>
 
@@ -49,247 +73,190 @@
         <i class="bi bi-ticket-perforated"></i> Sorteo solidario
       </a>
       <div class="d-flex gap-2">
-        <a class="btn btn-outline-light btn-sm" href="#participar"><i class="bi bi-hand-index"></i> Participar</a>
-        <a class="btn btn-primary btn-sm" href="#numeros"><i class="bi bi-grid-3x3-gap"></i> Números</a>
+        <a class="btn btn-outline-light btn-sm" href="#ganadores"><i class="bi bi-trophy"></i> Ganadores</a>
+        <a class="btn btn-primary btn-sm" href="#compartir"><i class="bi bi-share"></i> Compartir</a>
       </div>
     </div>
   </nav>
 
-  <!-- HERO -->
+  <!-- HERO (CIERRE) -->
   <header class="py-5 hero hero-photo">
     <div class="container">
       <div class="row g-4 align-items-center">
         <div class="col-lg-8">
-          <h1 class="display-6 fw-bold mb-2">Sorteo solidario</h1>
-        <p class="lead mb-3">
-          Tu ayuda hoy se transforma en un <strong>aporte solidario</strong>: la participación es por <strong>paquete de 5 números</strong>
-          con un aporte de <strong>$10.000</strong> (no se venden números sueltos).
-          Es una manera directa de acompañar a Fernando en su lucha contra el <strong>cáncer</strong> y acercar el
-           <strong>aspirador ultrasónico</strong> que necesita para su cirugía de hígado.
-        </p>
-          <div class="mt-4 small text-muted">
-          * Participás con un único aporte: <strong>$10.000 = 5 números</strong> (no se puede elegir 1 o 2).
-          Al confirmar la reserva, te abrimos WhatsApp para dejar el aviso; el comprobante podés enviarlo <strong>ahora o más tarde</strong>.
-        </div>
+          <h1 class="display-6 fw-bold mb-2">Gracias de corazón por acompañarnos: el sorteo solidario llegó a su cierre</h1>
+
+          <p class="lead mb-3">
+            Con muchísimo amor y esfuerzo comunitario logramos el objetivo: recaudar fondos para la compra del
+            <strong>aspirador ultrasónico</strong> que se utilizará en la cirugía de hígado de Fernando.
+          </p>
 
           <div class="d-flex flex-wrap gap-2">
-            <span class="badge text-bg-dark p-2">
-              <i class="bi bi-cash-coin"></i> $10.000 = 5 números
+            <span class="badge text-bg-success p-2">
+              <i class="bi bi-heart-fill"></i> Objetivo cumplido
             </span>
             <span class="badge text-bg-secondary p-2">
-              <i class="bi bi-calendar-event"></i> Sorteo: Lunes 26/01/2026 • Jugada nocturna de Lotería Nacional
+              <i class="bi bi-calendar-check"></i> Sorteo realizado • Quiniela de la Ciudad (ex Quiniela Nacional) Nocturna • 26/01/2026
             </span>
-            <span class="badge text-bg-success p-2">
-              <i class="bi bi-bank"></i> Alias: <span class="font-mono">f.falbo</span>
-            </span>
+          </div>
+
+          <div class="mt-4">
+            <div class="alert alert-info small mb-0">
+              A cada persona que participó, compartió, transfirió, mandó un mensaje o acompañó: <strong>gracias de corazón</strong>.
+              Lo que se hizo acá es más grande que un sorteo: es comunidad, es esperanza, es estar.
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="mb-0">
+              Fernando sigue adelante con una nueva etapa de tratamiento y una próxima operación.
+              <strong>Gracias por sostener esta lucha con amor</strong>. Que este sea un recordatorio de que no está solo.
+            </p>
           </div>
 
           <div class="mt-4 d-flex flex-wrap gap-2">
-            <a class="btn btn-primary" href="#numeros">
-              <i class="bi bi-grid"></i> Elegir números
+            <a class="btn btn-primary" href="#ganadores">
+              <i class="bi bi-trophy"></i> Ver ganadores
             </a>
             <a class="btn btn-outline-light" href="#compartir">
-              <i class="bi bi-share"></i> Compartir
+              <i class="bi bi-qr-code"></i> Compartir resultados
             </a>
-          </div>
-
-          <div class="mt-4 small text-muted">
-            * La participación es por <strong>aporte solidario indivisible</strong>: <strong>$10.000 = 5 números</strong>.
-            Al confirmar la reserva, te abrimos WhatsApp para dejar el aviso; el comprobante podés enviarlo <strong>ahora o más tarde</strong>.
           </div>
         </div>
 
         <div class="col-lg-4">
           <div class="card cardglass shadow-sm">
             <div class="card-body">
-              <h2 class="h6 fw-bold mb-3"><i class="bi bi-gift"></i> Premios</h2>
-              <ol class="mb-0">
-                <li>TV Smart 50"</li>
-                <li>Freidora de aire</li>
-                <li>Licuadora</li>
-              </ol>
-              <hr>
-              <div class="d-flex gap-3 flex-wrap">
-                <div>
-                  <div class="small text-muted">Disponibles</div>
-                  <div class="h4 mb-0" id="countLibre">—</div>
-                </div>
-                <div>
-                  <div class="small text-muted">Reservados</div>
-                  <div class="h4 mb-0" id="countReservado">—</div>
-                </div>
-                <div>
-                  <div class="small text-muted">Confirmados</div>
-                  <div class="h4 mb-0" id="countConfirmado">—</div>
-                </div>
+              <h2 class="h6 fw-bold mb-3"><i class="bi bi-stars"></i> Un mensaje de esperanza</h2>
+              <p class="small mb-3">
+                “Paso a paso, con fe y con gente buena cerca, se puede.
+                Gracias por ser parte de este abrazo.”
+              </p>
+              <div class="small text-muted">
+                — Fernando y familia
               </div>
-
-              <button class="btn btn-outline-light w-100 mt-3" id="btnRefresh">
-                <i class="bi bi-arrow-clockwise"></i> Actualizar disponibilidad
-              </button>
-
-              <div class="alert alert-warning mt-3 mb-0 small">
-                <strong>Importante:</strong> elegís <span id="numsPerPurchase">5</span> números.
-                Si alguno se ocupa justo antes, el sistema te avisa para elegir otros.
+              <hr>
+              <div class="alert alert-warning small mb-0">
+                Este sitio queda como <strong>cierre y agradecimiento</strong> del sorteo. Gracias a todos!!
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </header>
 
   <main class="pb-5">
-    <!-- CÓMO PARTICIPAR -->
-    <section class="py-5 border-top" id="participar">
+    <!-- GANADORES -->
+    <section class="py-5 border-top" id="ganadores">
       <div class="container">
-        <div class="row g-4">
-          <div class="col-lg-7">
-            <h2 class="h4 fw-bold mb-3"><i class="bi bi-info-circle"></i> Cómo participar</h2>
-
-            <div class="steps">
-              <div class="step">
-                <div class="step-num">1</div>
-                <div>Elegí <strong>5 números</strong> en la grilla.</div>
-              </div>
-              <div class="step">
-                <div class="step-num">2</div>
-                <div>Completá tus datos y confirmá la reserva. Se genera un <strong>ID de operación</strong>.</div>
-              </div>
-              <div class="step">
-                <div class="step-num">3</div>
-                <div>Transferí a <strong>alias <span class="font-mono">f.falbo</span></strong> y enviá el comprobante por WhatsApp (ahora o más tarde).</div>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <h3 class="h6 fw-bold mb-2"><i class="bi bi-bank"></i> Datos de transferencia</h3>
-              <ul class="mb-0">
-                <li>Alias: <strong class="font-mono">f.falbo (Cuenta a nombre de Fernando Falbo)</strong></li>
-                <li>Monto: <strong>$10.000</strong></li>
-                <li>Concepto sugerido: <em>Sorteo + tu nombre</em></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="col-lg-5">
-            <div class="card cardglass shadow-sm">
-              <div class="card-body">
-                <h3 class="h6 fw-bold mb-3"><i class="bi bi-qr-code"></i> QR de transferencia (informativo)</h3>
-                <div class="d-flex justify-content-center">
-                  <div id="qrTransfer" class="qr-box"></div>
-                </div>
-                <p class="small text-muted mt-3 mb-0">
-                  Este QR contiene texto con alias/monto. Si tu app bancaria no lo toma como pago automático, usalo para copiar datos.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SELECTOR -->
-    <section class="py-5 border-top" id="numeros">
-      <div class="container">
-        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-end mb-3">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
           <div>
-            <h2 class="h4 fw-bold mb-1"><i class="bi bi-grid-3x3-gap"></i> Elegí tus números</h2>
-            <div class="text-muted small">Seleccionados: <strong id="selectedCount">0</strong>/<strong id="selectedMax">5</strong></div>
+            <h2 class="h4 fw-bold mb-1"><i class="bi bi-trophy"></i> Ganadores</h2>
+            <div class="text-muted small">Nombres publicados según registro.</div>
           </div>
-
-          <div class="d-flex gap-2 align-items-center">
-            <label class="small text-muted mb-0">Página</label>
-            <select id="pageSelect" class="form-select form-select-sm" style="width:auto"></select>
-            <button class="btn btn-outline-light btn-sm" id="btnClear">
-              <i class="bi bi-x-circle"></i> Limpiar
-            </button>
+          <div class="text-muted small">
+            Premios y ganadores de acuerdo a Sorteo.
           </div>
         </div>
 
-        <div id="numbersGrid" class="numbers-grid"></div>
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="card cardglass shadow-sm winner-card">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                  <div>
+                    <div class="badge text-bg-warning mb-2"><i class="bi bi-1-circle"></i> 1er premio</div>
+                    <h3 class="h6 fw-bold mb-1">TV Smart 50"</h3>
+                    <div class="text-muted small">Ganadora con el numero 148:</div>
+                    <div class="h5 mb-0">Abuela Patricia de quimioterapia</div>
+                  </div>
+                  <i class="bi bi-tv fs-3"></i>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div class="mt-3 small text-muted">
-          <span class="legend free"></span> Disponible
-          <span class="legend reserved ms-3"></span> Ocupado
-          <span class="legend selected ms-3"></span> Seleccionado
+          <div class="col-lg-4">
+            <div class="card cardglass shadow-sm winner-card">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                  <div>
+                    <div class="badge text-bg-secondary mb-2"><i class="bi bi-2-circle"></i> 2do premio</div>
+                    <h3 class="h6 fw-bold mb-1">Freidora de aire</h3>
+                    <div class="text-muted small">Ganador con el numero 712:</div>
+                    <div class="h5 mb-0">Cristian Minicelli</div>
+                  </div>
+                  <i class="bi bi-fire fs-3"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card cardglass shadow-sm winner-card">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                  <div>
+                    <div class="badge text-bg-success mb-2"><i class="bi bi-3-circle"></i> 3er premio</div>
+                    <h3 class="h6 fw-bold mb-1">Licuadora</h3>
+                    <div class="text-muted small">Ganadora con el numero 915 :</div>
+                    <div class="h5 mb-0">Marta Lidia Gonzalez Cuberes</div>
+                  </div>
+                  <i class="bi bi-cup-straw fs-3"></i>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <hr class="my-5">
 
+        <!-- AGRADECIMIENTO + QR -->
         <div class="row g-4">
           <div class="col-lg-7">
-            <h3 class="h5 fw-bold mb-3"><i class="bi bi-pencil-square"></i> Tus datos</h3>
-
-            <form id="reserveForm" class="card cardglass shadow-sm">
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-md-7">
-                    <label class="form-label">Nombre y apellido *</label>
-                    <input type="text" class="form-control" id="inpNombre" required maxlength="80">
-                  </div>
-                  <div class="col-md-5">
-                    <label class="form-label">DNI (opcional)</label>
-                    <input type="text" class="form-control" id="inpDni" maxlength="20">
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label">Teléfono (WhatsApp) *</label>
-                    <input type="tel" class="form-control" id="inpTelefono" required maxlength="30" placeholder="+54 11 ...">
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label">Email (opcional)</label>
-                    <input type="email" class="form-control" id="inpEmail" maxlength="80">
-                  </div>
-
-                  <div class="col-12">
-                    <div class="alert alert-info small mb-0">
-                      Al enviar se reservarán <strong>5 números</strong> por <strong>$10.000</strong> (aporte indivisible).
-                      Te vamos a abrir WhatsApp para dejar registrado el aviso de reserva; el comprobante podés enviarlo <strong>ahora o en otro momento</strong>.
-                    </div>
-                  </div>
-
-                  <div class="col-12 d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary" type="submit" id="btnReserve">
-                      <i class="bi bi-check2-circle"></i> Confirmar reserva
-                    </button>
-                    <button class="btn btn-outline-light" type="button" id="btnAutoScrollTop">
-                      <i class="bi bi-arrow-up"></i> Volver a números
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <div id="statusBox" class="mt-3"></div>
-          </div>
-
-          <div class="col-lg-5">
             <div class="card cardglass shadow-sm">
               <div class="card-body">
-                <h3 class="h6 fw-bold mb-3"><i class="bi bi-shield-check"></i> Transparencia</h3>
-                <ul class="small mb-0">
-                  <li>Los números ocupados quedan bloqueados para otros.</li>
-                  <li>Fernando recibe de manera directa las transferencias y gestiona los números.</li>
-                  <li>Si hay choque (dos personas eligiendo igual), gana quien confirma primero.</li>
-                </ul>
+                <h3 class="h5 fw-bold mb-3"><i class="bi bi-heart"></i> Gracias por acompañar</h3>
+                <p class="mb-2">
+                  A cada persona que participó, ayudó a difundir, transfirió, escribió un mensaje o simplemente estuvo:
+                  <strong>gracias</strong>. La solidaridad se vuelve real cuando se transforma en acciones pequeñas,
+                  repetidas por muchas personas.
+                </p>
+                <p class="mb-2">
+                  Hoy celebramos a los ganadores, pero sobre todo celebramos el <strong>objetivo cumplido</strong>.
+                  Este logro es de todos.
+                </p>
+                <div class="alert alert-info small mb-0">
+                  Para Fernando y para cada persona que esté atravesando una enfermedad:
+                  <strong>hay esperanza</strong>. Que nunca falte la fuerza, el amor y la red humana que sostiene.
+                </div>
               </div>
             </div>
+          </div>
 
-            <div class="card cardglass shadow-sm mt-3" id="compartir">
+          <div class="col-lg-5" id="compartir">
+            <div class="card cardglass shadow-sm">
               <div class="card-body">
-                <h3 class="h6 fw-bold mb-3"><i class="bi bi-share"></i> Compartir este sitio</h3>
+                <h3 class="h6 fw-bold mb-3"><i class="bi bi-qr-code"></i> QR para compartir los resultados</h3>
                 <div class="d-flex justify-content-center">
-                  <div id="qrShare" class="qr-box"></div>
+                  <div id="qrResults" class="qr-box"></div>
                 </div>
                 <button class="btn btn-outline-light w-100 mt-3" id="btnCopyLink">
-                  <i class="bi bi-clipboard"></i> Copiar link
+                  <i class="bi bi-clipboard"></i> Copiar link de este cierre
                 </button>
-                <div class="small text-muted mt-2">Compartilo por WhatsApp, Instagram, Facebook, etc.</div>
+                <div class="small text-muted mt-2">
+                  Compartilo por WhatsApp, Instagram, Facebook, etc.
+                </div>
+                <div class="small text-muted mt-2">
+                  Texto que incluye: cierre del sorteo + ganadores + link.
+                </div>
               </div>
             </div>
 
             <div class="small text-muted mt-3">
-              * Sitio solidario. El sorteo se referencia al resultado de nocturno de la Lotería Nacional del 26/01/2026.
+              * Este sitio queda como publicación final del sorteo.
             </div>
           </div>
         </div>
@@ -298,46 +265,60 @@
     </section>
   </main>
 
-  <!-- MODAL ÉXITO -->
-  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content modalglass">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold"><i class="bi bi-check-circle"></i> Reserva confirmada</h5>
-          <!-- Bloqueado: se habilita recién cuando tocan WhatsApp -->
-          <button type="button" class="btn-close btn-close-white" id="modalCloseX" aria-label="Cerrar" disabled></button>
-        </div>
-        <div class="modal-body">
-          <p class="mb-2">Operación: <strong class="font-mono" id="modalOpId">—</strong></p>
-          <p class="mb-2">Números: <strong id="modalNums">—</strong></p>
-          <hr>
-          <p class="mb-2"><strong>Ahora:</strong> transferí <strong>$10.000</strong> a <strong class="font-mono">f.falbo</strong>.</p>
-          <p class="mb-0">
-            Te abrimos WhatsApp para dejar registrado el aviso de reserva.
-            El comprobante podés enviarlo <strong>ahora o en otro momento</strong>.
-          </p>
-        </div>
-        <div class="modal-footer d-flex flex-wrap gap-2">
-          <a class="btn btn-success" id="btnWhatsApp" href="#" target="_blank" rel="noopener">
-            <i class="bi bi-whatsapp"></i> Abrir WhatsApp (enviar aviso / comprobante)
-          </a>
-          <button type="button" class="btn btn-outline-light" id="btnModalClose" data-bs-dismiss="modal" disabled>
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- QR library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Config + App (cache-busting) -->
-  <script src="fer_static/fer_js/fer_config.js?v=20251227_3"></script>
-  <script src="fer_static/fer_js/fer_app.js?v=20251227_3"></script>
+  <script>
+    // ===== CIERRE: QR con texto + link (ganadores) =====
+    function buildShareText() {
+      const g1 = "Abuela Patricia de quimioterapia";
+      const g2 = "Cristian Minicelli";
+      const g3 = "Marta Lidia Gonzalez Cuberes";
+
+      const premios =
+        "🏆 Ganadores del Sorteo Solidario (Fernando)\n" +
+        "1) TV Smart 50\": " + g1 + "\n" +
+        "2) Freidora de aire: " + g2 + "\n" +
+        "3) Licuadora: " + g3 + "\n\n";
+
+      const msg =
+        "Gracias a todos por participar y acompañar. Objetivo cumplido 💚\n" +
+        "Este es el cierre del sorteo y el detalle de ganadores.\n\n" +
+        "Link: " + window.location.href;
+
+      return premios + msg;
+    }
+
+    function initQRResults() {
+      const box = document.getElementById("qrResults");
+      if (!box) return;
+      box.innerHTML = "";
+
+      // FIX: forzamos colores para evitar que CSS/tema lo “blanquee”
+      new QRCode(box, {
+        text: buildShareText(),
+        width: 180,
+        height: 180,
+        colorDark: "#000000",
+        colorLight: "#FFFFFF",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    async function copyLink() {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copiado al portapapeles.");
+      } catch {
+        alert("No pude copiar automáticamente. Copialo manualmente desde la barra de direcciones.");
+      }
+    }
+
+    document.getElementById("btnCopyLink")?.addEventListener("click", copyLink);
+    initQRResults();
+  </script>
 </body>
 </html>
-
